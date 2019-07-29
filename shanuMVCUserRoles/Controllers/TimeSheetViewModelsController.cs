@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
@@ -7,29 +6,30 @@ using System.Web.Mvc;
 using shanuMVCUserRoles.Models;
 using System.Collections.Generic;
 using System.Net.Mail;
-using CsvHelper;
 
 namespace shanuMVCUserRoles.Controllers
 {
     public class TimeSheetViewModelsController : Controller
     {
+        private int _daysOffHoliday;
+        private int _daysOffFullMedical;
+        private int _daysOffPartialMedical;
+        private int _daysOffNotPaid;
         private ApplicationDbContext db = new ApplicationDbContext();
 
-        // GET: TimeSheetViewModels
         public ActionResult Index()
         {
 
             return View(db.TimeSheetViewModel.ToList());
         }
 
-        // GET: TimeSheetViewModels/Details/5
         public ActionResult Details(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            TimeSheetViewModel timeSheetViewModel = db.TimeSheetViewModel.Find(id);
+            var timeSheetViewModel = db.TimeSheetViewModel.Find(id);
             if (timeSheetViewModel == null)
             {
                 return HttpNotFound();
@@ -37,16 +37,14 @@ namespace shanuMVCUserRoles.Controllers
             return View(timeSheetViewModel);
         }
 
-        // GET: TimeSheetViewModels/Create
         public ActionResult Create()
         {
             ViewBag.Name = Pontaj();    
+
             return View();
         }
 
-        // POST: TimeSheetViewModels/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "Id,Mark,FirstName,LastName,CNP,TeamLeaderEmail,Flag")] TimeSheetViewModel timeSheetViewModel)
@@ -62,15 +60,13 @@ namespace shanuMVCUserRoles.Controllers
         }
 
 
-
-        // GET: TimeSheetViewModels/Edit/5
         public ActionResult Edit(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            TimeSheetViewModel timeSheetViewModel = db.TimeSheetViewModel.Find(id);
+            var timeSheetViewModel = db.TimeSheetViewModel.Find(id);
             if (timeSheetViewModel == null)
             {
                 return HttpNotFound();
@@ -78,14 +74,11 @@ namespace shanuMVCUserRoles.Controllers
             return View(timeSheetViewModel);
         }
 
-        // POST: TimeSheetViewModels/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "Id,Mark,FirstName,LastName,CNP,TeamLeaderEmail,Flag")] TimeSheetViewModel timeSheetViewModel)
         {
-            
             if (ModelState.IsValid)
             {
                 db.Entry(timeSheetViewModel).State = EntityState.Modified;
@@ -94,7 +87,7 @@ namespace shanuMVCUserRoles.Controllers
             }
             return View(timeSheetViewModel);
         }
-        
+
 
         public List<HolidayViewModel> Holiday()
         {
@@ -147,105 +140,102 @@ namespace shanuMVCUserRoles.Controllers
             return ooh.ToList();
         }
 
+        private static int ComputeNumberOfDaysInMonth()
+        {
+            return DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
+        }
+
+        private static int ComputeNumberOfBusinessDaysInMonth(int daysInMonth)
+        {
+            var businessDaysInMonth = 0;
+            var firstDayInMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            var lastDayInMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, daysInMonth);
+            for (var date = firstDayInMonth; date < lastDayInMonth; date = date.AddDays(1))
+            {
+                if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+                {
+                    businessDaysInMonth++;
+                }
+            }
+
+            return businessDaysInMonth;
+        }
+
+        private static int ComputeNumberOfHolidayDays(bool holidayType, List<HolidayViewModel> holidayDays)
+        {
+            var totalNumberOfHolidayDays = 0;
+            if (!holidayType)
+            {
+                return totalNumberOfHolidayDays;
+            }
+            foreach (var hol in holidayDays)
+            {
+                for (var date = hol.StartDate; date <= hol.EndDate; date = date.AddDays(1))
+                {
+                    if (date.DayOfWeek != DayOfWeek.Saturday && date.DayOfWeek != DayOfWeek.Sunday)
+                    {
+                        totalNumberOfHolidayDays++;
+                    }
+                }
+            }
+
+            return totalNumberOfHolidayDays;
+        }
+
+        private static double ComputeOohHours(List<OOHRequestViewModel> ooh)
+        {
+            double bonusHours = 0;
+            if (!ooh.Any())
+            {
+                return bonusHours;
+            }
+            foreach (var oohObject in ooh)
+            {
+                bonusHours += (oohObject.Hours * 2);
+            }
+
+            return bonusHours;
+        }
+
+        private void ComputeAllHolidayTypes(List<HolidayViewModel> holiday, List<HolidayViewModel> fullMedicalHoliday,
+            List<HolidayViewModel> partialMedicalHoliday, List<HolidayViewModel> notPaidHoliday)
+        {
+            _daysOffHoliday = ComputeNumberOfHolidayDays(holiday.Any(), holiday);
+            _daysOffFullMedical = ComputeNumberOfHolidayDays(fullMedicalHoliday.Any(), fullMedicalHoliday);
+            _daysOffPartialMedical = ComputeNumberOfHolidayDays(partialMedicalHoliday.Any(), partialMedicalHoliday);
+            _daysOffNotPaid = ComputeNumberOfHolidayDays(notPaidHoliday.Any(), notPaidHoliday);
+        }
+
+        private int ComputeDaysForTimeSheet()
+        {
+            var holiday = Holiday();
+            var fullMedicalHoliday = FullMedicalHoliday();
+            var partialMedicalHoliday = PartialMedicalHoliday();
+            var notPaidHoliday = NotPaidHoliday();
+
+            var daysInMonth = ComputeNumberOfDaysInMonth();
+            var businessDaysInMonth = ComputeNumberOfBusinessDaysInMonth(daysInMonth);
+
+            ComputeAllHolidayTypes(holiday, fullMedicalHoliday, partialMedicalHoliday, notPaidHoliday);
+
+            return businessDaysInMonth;
+        }
 
         public string PontajV2()
         {
-            bool holiday = Holiday().Count > 0;
-            bool fullMedicalHoliday = FullMedicalHoliday().Count > 0;
-            bool partialMedicalHoliday = PartialMedicalHoliday().Count > 0;
-            bool notPaidHoliday = NotPaidHoliday().Count > 0;
-            bool ooh = Ooh().Count > 0;
+            var bonusHours = ComputeOohHours(Ooh());
+            var businessDaysInMonth = ComputeDaysForTimeSheet();
 
-            int daysInMonth = System.DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
-            int businessDaysInMonth = 0;
-            for (var date = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1); date < new DateTime(DateTime.Now.Year, DateTime.Now.Month, daysInMonth); date = date.AddDays(1))
-            {
-                if (date.DayOfWeek != DayOfWeek.Saturday
-                    && date.DayOfWeek != DayOfWeek.Sunday)
-                    businessDaysInMonth++;
-            }
-
-            int workingHoursThisMonth = 0;
-            int hoursWorked = 0;
-            double hoursPaid = 0;
-            double transport = 80.0;
-            int mealTickets = 0;
-
-            int daysOffHoliday = 0;
-            int daysOffFullMedical = 0;
-            int daysOffPartialMedical = 0;
-            int daysOffNotPaid = 0;
-
-            double bonusHours = 0;
-
-            if (holiday == true)
-            {
-                foreach (var hol in Holiday())
-                {
-                    for (var date = hol.StartDate; date <= hol.EndDate; date = date.AddDays(1))
-                    {
-                        if (date.DayOfWeek != DayOfWeek.Saturday
-                            && date.DayOfWeek != DayOfWeek.Sunday)
-                            daysOffHoliday++;
-                    }
-                }
-            }
-            if (fullMedicalHoliday == true)
-            {
-                foreach (var hol in FullMedicalHoliday())
-                {
-                    for (var date = hol.StartDate; date <= hol.EndDate; date = date.AddDays(1))
-                    {
-                        if (date.DayOfWeek != DayOfWeek.Saturday
-                            && date.DayOfWeek != DayOfWeek.Sunday)
-                            daysOffFullMedical++;
-                    }
-                }
-            }
-            if (partialMedicalHoliday == true)
-            {
-                foreach (var hol in PartialMedicalHoliday())
-                {
-                    for (var date = hol.StartDate; date <= hol.EndDate; date = date.AddDays(1))
-                    {
-                        if (date.DayOfWeek != DayOfWeek.Saturday
-                            && date.DayOfWeek != DayOfWeek.Sunday)
-                            daysOffPartialMedical++;
-                    }
-                }
-            }
-            if (notPaidHoliday == true)
-            {
-                foreach (var hol in NotPaidHoliday())
-                {
-                    for (var date = hol.StartDate; date <= hol.EndDate; date = date.AddDays(1))
-                    {
-                        if (date.DayOfWeek != DayOfWeek.Saturday
-                            && date.DayOfWeek != DayOfWeek.Sunday)
-                            daysOffNotPaid++;
-                    }
-                }
-            }
-            if (ooh == true)
-            {
-                foreach (var objectooh in Ooh())
-                {
-                    bonusHours += (objectooh.Hours * 2);
-                }
-            }
-
-            workingHoursThisMonth = businessDaysInMonth * 8;
-            hoursWorked = (businessDaysInMonth - daysOffHoliday - daysOffFullMedical - daysOffPartialMedical - daysOffNotPaid) * 8 + Convert.ToInt32(bonusHours);
-            hoursPaid = (hoursWorked - Convert.ToInt32(bonusHours)) + daysOffHoliday * 8 + daysOffFullMedical * 8 + daysOffPartialMedical * 0.75 * 8 + bonusHours * 2;
-            transport = (float)((float)(businessDaysInMonth - daysOffHoliday - daysOffFullMedical - daysOffPartialMedical - daysOffNotPaid) / (float)businessDaysInMonth) * (float)transport;
-            mealTickets = (businessDaysInMonth - daysOffHoliday - daysOffFullMedical - daysOffPartialMedical - daysOffNotPaid);
+            var workingHoursThisMonth = businessDaysInMonth * 8;
+            var hoursWorked = (businessDaysInMonth - _daysOffHoliday - _daysOffFullMedical - _daysOffPartialMedical - _daysOffNotPaid) * 8 + Convert.ToInt32(bonusHours);
+            var hoursPaid = (hoursWorked - Convert.ToInt32(bonusHours)) + _daysOffHoliday * 8 + _daysOffFullMedical * 8 + _daysOffPartialMedical * 0.75 * 8 + bonusHours * 2;
+            var transport = (float)((float)(businessDaysInMonth - _daysOffHoliday - _daysOffFullMedical - _daysOffPartialMedical - _daysOffNotPaid) / (float)businessDaysInMonth) * (float)80.0;
+            var mealTickets = (businessDaysInMonth - _daysOffHoliday - _daysOffFullMedical - _daysOffPartialMedical - _daysOffNotPaid);
 
 
             return "Ore lucratoare in luna: " + workingHoursThisMonth + " Ore lucrate in luna: " + hoursWorked
                 + " Ore platite in luna: " + hoursPaid + " Decont transport: " + transport + " Tichete de masa: " + mealTickets;
         }
-
-
 
         public string Pontaj()
         {
@@ -355,7 +345,6 @@ namespace shanuMVCUserRoles.Controllers
         }
 
 
-        // GET: TimeSheetViewModels/Delete/5
         public ActionResult Delete(int? id)
         {
             if (id == null)
@@ -370,7 +359,6 @@ namespace shanuMVCUserRoles.Controllers
             return View(timeSheetViewModel);
         }
 
-        // POST: TimeSheetViewModels/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)

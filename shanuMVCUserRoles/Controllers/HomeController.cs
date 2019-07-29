@@ -4,7 +4,7 @@ using System.Linq;
 using System;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
-using System.Collections.Generic;
+using shanuMVCUserRoles.Resources;
 
 namespace shanuMVCUserRoles.Controllers
 {
@@ -20,56 +20,31 @@ namespace shanuMVCUserRoles.Controllers
 
 		public ActionResult About()
 		{
-			ViewBag.Message = "Your application description page.";
+			ViewBag.Message = ControllerResources.ApplicationDescriptionPage;
 
 			return View();
 		}
 
 		public ActionResult Contact()
 		{
-			ViewBag.Message = "Your contact page.";
+			ViewBag.Message = ControllerResources.ContactPage;
 
 			return View();
 		}
 
-        public Boolean isTeamLeaderUser()
+        public string GetUserRole()
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                var user = User.Identity;
-                ApplicationDbContext context = new ApplicationDbContext();
-                var UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
-                var s = UserManager.GetRoles(user.GetUserId());
-                if (s[0].ToString() == "Team Leader")
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            return false;
-        }
+            var userRole = string.Empty;
 
-        public Boolean isManagerUser()
-        {
-            if (User.Identity.IsAuthenticated)
+            if (!User.Identity.IsAuthenticated)
             {
-                var user = User.Identity;
-                ApplicationDbContext context = new ApplicationDbContext();
-                var UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
-                var s = UserManager.GetRoles(user.GetUserId());
-                if (s[0].ToString() == "Manager")
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return userRole;
             }
-            return false;
+
+            var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext()));
+            userRole = userManager.GetRoles(User.Identity.GetUserId())[0];
+
+            return userRole;
         }
 
         public ActionResult TeamLeaderStatistics()
@@ -86,9 +61,8 @@ namespace shanuMVCUserRoles.Controllers
 
             if (User.Identity.IsAuthenticated)
             {
-                if (isTeamLeaderUser() == true)
+                if (GetUserRole() == ControllerResources.TeamLeader)
                 {  
-
                     var user = User.Identity.Name;
 
                     string team = (from b in db.ProfileViewModel
@@ -102,7 +76,6 @@ namespace shanuMVCUserRoles.Controllers
                                               join c in db.Users on b.Email equals c.Email
                                               where b.Team == team
                                               select b;
-                    //statistics for holiday requests of the logged in teamleader
                     holidayRequestsInPending = (from b in db.AspNetHolidays
                                                 where (b.StartDate.Month.Equals(DateTime.Now.Month) && b.TLEmail.Equals(email)
                                                 && b.Flag.Equals(false))
@@ -114,12 +87,10 @@ namespace shanuMVCUserRoles.Controllers
                     holidayRequests = (from b in db.AspNetHolidays
                                                where (b.StartDate.Month.Equals(DateTime.Now.Month) && b.TLEmail.Equals(email))
                                                select b).Count();
-                    //place the values to a viewbag
                     ViewBag.holidayRequestsInPending = holidayRequestsInPending;
                     ViewBag.holidayRequestsApproved = holidayRequestsApproved;
                     ViewBag.holidayRequests = holidayRequests;
 
-                    //statistics for ooh requests of the logged in teamleader
                     oohRequestsInPending = (from b in db.OOHRequestViewModel
                                             where (b.Day.Month.Equals(DateTime.Now.Month) && b.TeamLeaderEmail.Equals(email)
                                             && b.Flag.Equals(false))
@@ -131,7 +102,6 @@ namespace shanuMVCUserRoles.Controllers
                     oohRequests = (from b in db.OOHRequestViewModel
                                            where (b.Day.Month.Equals(DateTime.Now.Month) && b.TeamLeaderEmail.Equals(email))
                                            select b).Count();
-                    //place the values to a viewbag
                     ViewBag.oohRequestsInPending = oohRequestsInPending;
                     ViewBag.oohRequestsApproved = oohRequestsApproved;
                     ViewBag.oohRequests = oohRequests;
@@ -146,7 +116,7 @@ namespace shanuMVCUserRoles.Controllers
         {
             if (User.Identity.IsAuthenticated)
             {
-                if (isManagerUser() == true)
+                if (GetUserRole() == "Manager")
                 {
                     
                 }
@@ -211,37 +181,37 @@ namespace shanuMVCUserRoles.Controllers
 
         public ActionResult Applicationsupport()
         {
-            return GenericDashboard("Application Support");
+            return GenericDashboard(ControllerResources.ApplicationSupport);
         }
 
         public ActionResult SoftwareDevelopment()
         {
-            return GenericDashboard("Software Development");
+            return GenericDashboard(ControllerResources.SoftwareDevelopment);
         }
 
         public ActionResult BusinessIntelligence()
         {
-            return GenericDashboard("Business Intelligence");
+            return GenericDashboard(ControllerResources.BusinessIntelligence);
         }
 
         public ActionResult SQLDBA()
         {
-            return GenericDashboard("SQLDBA");
+            return GenericDashboard(ControllerResources.SQLDBA);
         }
 
         public ActionResult OraDBA()
         {
-            return GenericDashboard("OraDBA");
+            return GenericDashboard(ControllerResources.OraDBA);
         }
 
         public ActionResult Middleware()
         {
-            return GenericDashboard("Middleware");
+            return GenericDashboard(ControllerResources.Middleware);
         }
 
         public ActionResult UNIX()
         {
-            return GenericDashboard("UNIX");
+            return GenericDashboard(ControllerResources.UNIX);
         }
 
 

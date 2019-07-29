@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
-using System.Web;
 using System.Web.Mvc;
 using shanuMVCUserRoles.Models;
 
@@ -14,7 +11,6 @@ namespace shanuMVCUserRoles.Controllers
     {
         private ApplicationDbContext db = new ApplicationDbContext();
 
-        // GET: OOHRequestViewModels
         public ActionResult Index(string sortOrder, string searchString)
         {
             ViewBag.FullNameSortParm = String.IsNullOrEmpty(sortOrder) ? "fullName_desc" : "fullName_asc";
@@ -92,7 +88,6 @@ namespace shanuMVCUserRoles.Controllers
             return View(list.ToList());
         }
 
-        // GET: OOHRequestViewModels/Details/5
         public ActionResult Details(int? id)
         {
             if (id == null)
@@ -107,15 +102,12 @@ namespace shanuMVCUserRoles.Controllers
             return View(oOHRequestViewModel);
         }
 
-        // GET: OOHRequestViewModels/Create
         public ActionResult Create()
         {
             return View();
         }
 
-        // POST: OOHRequestViewModels/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind(Include = "Id,FullName,Day,Hours,TicketNUmber,TeamLeaderEmail,Flag,Email")] OOHRequestViewModel oOHRequestViewModel)
@@ -129,7 +121,8 @@ namespace shanuMVCUserRoles.Controllers
 
             return View(oOHRequestViewModel);
         }
-        //ooh request inPending and approved for employee
+
+
         public ActionResult InPending()
         {
             var list = from b in db.OOHRequestViewModel
@@ -148,7 +141,6 @@ namespace shanuMVCUserRoles.Controllers
             return View(list.ToList());
         }
 
-        //ooh request inPending and approved for teamleader
         public ActionResult InPendingTeamLeader()
         {
             var list = from b in db.OOHRequestViewModel
@@ -167,8 +159,6 @@ namespace shanuMVCUserRoles.Controllers
             return View(list.ToList());
         }
 
-
-        // GET: OOHRequestViewModels/Edit/5
         public ActionResult Edit(int? id)
         {
             if (id == null)
@@ -183,9 +173,7 @@ namespace shanuMVCUserRoles.Controllers
             return View(oOHRequestViewModel);
         }
 
-        // POST: OOHRequestViewModels/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see https://go.microsoft.com/fwlink/?LinkId=317598.
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit([Bind(Include = "Id,FullName,Day,Hours,TicketNUmber,TeamLeaderEmail,Flag,Email")] OOHRequestViewModel oOHRequestViewModel)
@@ -199,7 +187,6 @@ namespace shanuMVCUserRoles.Controllers
             return View(oOHRequestViewModel);
         }
 
-        // GET: OOHRequestViewModels/Delete/5
         public ActionResult Delete(int? id)
         {
             if (id == null)
@@ -214,7 +201,6 @@ namespace shanuMVCUserRoles.Controllers
             return View(oOHRequestViewModel);
         }
 
-        // POST: OOHRequestViewModels/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)

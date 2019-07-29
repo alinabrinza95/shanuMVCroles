@@ -1,100 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
-using System.Security.Claims;
-using System.Web.Security;
+﻿using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using shanuMVCUserRoles.Models;
 using Microsoft.AspNet.Identity.EntityFramework;
+using shanuMVCUserRoles.Resources;
 
 namespace shanuMVCUserRoles.Controllers
 {
-	[Authorize]
+    [Authorize]
 	public class UsersController : Controller
     {
-		// GET: Users
-        //checks if the logged in user is Admin
-		public Boolean isAdminUser()
-		{
-			if (User.Identity.IsAuthenticated)
-			{
-				var user = User.Identity;
-				ApplicationDbContext context = new ApplicationDbContext();
-				var UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
-				var s = UserManager.GetRoles(user.GetUserId());
-				if (s[0].ToString() == "Admin")
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
-			return false;
-		}
-        //checks if logged in user is employee
-        public Boolean isEmployeeUser()
+        public string GetUserRole()
         {
-            if (User.Identity.IsAuthenticated)
-            {
-                var user = User.Identity;
-                ApplicationDbContext context = new ApplicationDbContext();
-                var UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
-                var s = UserManager.GetRoles(user.GetUserId());
-                if (s[0].ToString() == "Employee")
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            return false;
-        }
-        //checks if logged in user is team leader
-        public Boolean isTeamLeaderUser()
-        {
-            if (User.Identity.IsAuthenticated)
-            {
-                var user = User.Identity;
-                ApplicationDbContext context = new ApplicationDbContext();
-                var UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
-                var s = UserManager.GetRoles(user.GetUserId());
-                if (s[0].ToString() == "Team Leader")
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            return false;
-        }
+            var userRole = string.Empty;
 
-        //checks if logged in user is manager
-        public Boolean isManagerUser()
-        {
-            if (User.Identity.IsAuthenticated)
+            if (!User.Identity.IsAuthenticated)
             {
-                var user = User.Identity;
-                ApplicationDbContext context = new ApplicationDbContext();
-                var UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
-                var s = UserManager.GetRoles(user.GetUserId());
-                if (s[0].ToString() == "Manager")
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return userRole;
             }
-            return false;
+
+            var userManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext()));
+            userRole = userManager.GetRoles(User.Identity.GetUserId())[0];
+
+            return userRole;
         }
 
 
@@ -103,43 +30,17 @@ namespace shanuMVCUserRoles.Controllers
 			if (User.Identity.IsAuthenticated)
 			{
 				var user = User.Identity;
+
 				ViewBag.Name = user.Name;
-                
+				ViewBag.displayMenu = ControllerResources.No;
+                ViewBag.displayMenu = GetUserRole();
 
-				//	ApplicationDbContext context = new ApplicationDbContext();
-				//	var UserManager = new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(context));
-
-				//var s=	UserManager.GetRoles(user.GetUserId());
-				ViewBag.displayMenu = "No";
-                    
-
-				if (isAdminUser())
-				{
-					ViewBag.displayMenu = "AdminUser";
-				}
-                if (isEmployeeUser())
-                {
-                    ViewBag.displayMenu = "EmployeeUser";
-                }
-                if (isTeamLeaderUser())
-                {
-                    ViewBag.displayMenu = "Team Leader";
-                }
-                if (isManagerUser())
-                {
-                    ViewBag.displayMenu = "Manager";
-                }
                 return View();
 			}
-			else
-			{
-				ViewBag.Name = "Not Logged IN";
-			}
 
+            ViewBag.Name = ControllerResources.NotLoggedIn;
 
-			return View();
-
-
+            return View();
 		}
 	}
 }

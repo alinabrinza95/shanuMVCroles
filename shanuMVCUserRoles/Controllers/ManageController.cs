@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -9,10 +8,10 @@ using Microsoft.Owin.Security;
 using shanuMVCUserRoles.Models;
 using System.Net;
 using System.Data.Entity;
+using shanuMVCUserRoles.Resources;
 
 namespace shanuMVCUserRoles.Controllers
 {
-
 
     [Authorize]
     public class ManageController : Controller
@@ -55,19 +54,18 @@ namespace shanuMVCUserRoles.Controllers
             }
         }
 
-        //
-        // GET: /Manage/Index
+
         public async Task<ActionResult> Index(ManageMessageId? message)
         {
             ViewBag.StatusMessage =
-                message == ManageMessageId.ChangePasswordSuccess ? "Your password has been changed."
-                : message == ManageMessageId.ProfileUpdated ? "Your profile has been successfully updated."
-                : message == ManageMessageId.SetPasswordSuccess ? "Your password has been set."
-                : message == ManageMessageId.SetTwoFactorSuccess ? "Your two-factor authentication provider has been set."
-                : message == ManageMessageId.Error ? "An error has occurred."
-                : message == ManageMessageId.AddPhoneSuccess ? "Your phone number was added."
-                : message == ManageMessageId.RemovePhoneSuccess ? "Your phone number was removed."
-                : "";
+                message == ManageMessageId.ChangePasswordSuccess ? ControllerResources.ChangePasswordSuccess
+                : message == ManageMessageId.ProfileUpdated ? ControllerResources.ProfileUpdated
+                : message == ManageMessageId.SetPasswordSuccess ? ControllerResources.SetPasswordSuccess
+                : message == ManageMessageId.SetTwoFactorSuccess ? ControllerResources.SetTwoFactorSuccess
+                : message == ManageMessageId.Error ? ControllerResources.Error
+                : message == ManageMessageId.AddPhoneSuccess ? ControllerResources.AddPhoneSuccess
+                : message == ManageMessageId.RemovePhoneSuccess ? ControllerResources.RemovePhoneSuccess
+                : string.Empty;
 
             var userId = User.Identity.GetUserId();
             var model = new IndexViewModel
@@ -78,17 +76,17 @@ namespace shanuMVCUserRoles.Controllers
                 Logins = await UserManager.GetLoginsAsync(userId),
                 BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(userId)
             };
+
             return View(model);
         }
 
-        //
-        // POST: /Manage/RemoveLogin
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> RemoveLogin(string loginProvider, string providerKey)
         {
             ManageMessageId? message;
             var result = await UserManager.RemoveLoginAsync(User.Identity.GetUserId(), new UserLoginInfo(loginProvider, providerKey));
+
             if (result.Succeeded)
             {
                 var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
@@ -105,15 +103,12 @@ namespace shanuMVCUserRoles.Controllers
             return RedirectToAction("ManageLogins", new { Message = message });
         }
 
-        //
-        // GET: /Manage/AddPhoneNumber
         public ActionResult AddPhoneNumber()
         {
             return View();
         }
 
-        //
-        // POST: /Manage/AddPhoneNumber
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> AddPhoneNumber(AddPhoneNumberViewModel model)
@@ -122,7 +117,7 @@ namespace shanuMVCUserRoles.Controllers
             {
                 return View(model);
             }
-            // Generate the token and send it
+
             var code = await UserManager.GenerateChangePhoneNumberTokenAsync(User.Identity.GetUserId(), model.Number);
             if (UserManager.SmsService != null)
             {
@@ -136,8 +131,7 @@ namespace shanuMVCUserRoles.Controllers
             return RedirectToAction("VerifyPhoneNumber", new { PhoneNumber = model.Number });
         }
 
-        //
-        // POST: /Manage/EnableTwoFactorAuthentication
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> EnableTwoFactorAuthentication()
@@ -151,8 +145,7 @@ namespace shanuMVCUserRoles.Controllers
             return RedirectToAction("Index", "Manage");
         }
 
-        //
-        // POST: /Manage/DisableTwoFactorAuthentication
+ 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DisableTwoFactorAuthentication()
@@ -166,17 +159,13 @@ namespace shanuMVCUserRoles.Controllers
             return RedirectToAction("Index", "Manage");
         }
 
-        //
-        // GET: /Manage/VerifyPhoneNumber
+ 
         public async Task<ActionResult> VerifyPhoneNumber(string phoneNumber)
         {
             var code = await UserManager.GenerateChangePhoneNumberTokenAsync(User.Identity.GetUserId(), phoneNumber);
-            // Send an SMS through the SMS provider to verify the phone number
             return phoneNumber == null ? View("Error") : View(new VerifyPhoneNumberViewModel { PhoneNumber = phoneNumber });
         }
 
-        //
-        // POST: /Manage/VerifyPhoneNumber
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> VerifyPhoneNumber(VerifyPhoneNumberViewModel model)
@@ -195,13 +184,12 @@ namespace shanuMVCUserRoles.Controllers
                 }
                 return RedirectToAction("Index", new { Message = ManageMessageId.AddPhoneSuccess });
             }
-            // If we got this far, something failed, redisplay form
+
             ModelState.AddModelError("", "Failed to verify phone");
             return View(model);
         }
 
-        //
-        // GET: /Manage/RemovePhoneNumber
+
         public async Task<ActionResult> RemovePhoneNumber()
         {
             var result = await UserManager.SetPhoneNumberAsync(User.Identity.GetUserId(), null);
@@ -217,15 +205,13 @@ namespace shanuMVCUserRoles.Controllers
             return RedirectToAction("Index", new { Message = ManageMessageId.RemovePhoneSuccess });
         }
 
-        //
-        // GET: /Manage/ChangePassword
+
         public ActionResult ChangePassword()
         {
             return View();
         }
 
-        //
-        // POST: /Manage/ChangePassword
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> ChangePassword(ChangePasswordViewModel model)
@@ -248,15 +234,12 @@ namespace shanuMVCUserRoles.Controllers
             return View(model);
         }
 
-        //
-        // GET: /Manage/SetPassword
         public ActionResult SetPassword()
         {
             return View();
         }
 
-        //
-        // POST: /Manage/SetPassword
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> SetPassword(SetPasswordViewModel model)
@@ -276,12 +259,10 @@ namespace shanuMVCUserRoles.Controllers
                 AddErrors(result);
             }
 
-            // If we got this far, something failed, redisplay form
             return View(model);
         }
 
-        //
-        // GET: /Manage/ManageLogins
+
         public async Task<ActionResult> ManageLogins(ManageMessageId? message)
         {
             ViewBag.StatusMessage =
@@ -302,7 +283,7 @@ namespace shanuMVCUserRoles.Controllers
                 OtherLogins = otherLogins
             });
         }
-        //******************************************
+
         public ActionResult EditProfile()
         {
             var user = User.Identity.Name;
@@ -339,19 +320,14 @@ namespace shanuMVCUserRoles.Controllers
             }
             return View(profileViewModel);
         }
-        //******************************************
-        //
-        // POST: /Manage/LinkLogin
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult LinkLogin(string provider)
         {
-            // Request a redirect to the external login provider to link a login for the current user
             return new AccountController.ChallengeResult(provider, Url.Action("LinkLoginCallback", "Manage"), User.Identity.GetUserId());
         }
 
-        //
-        // GET: /Manage/LinkLoginCallback
         public async Task<ActionResult> LinkLoginCallback()
         {
             var loginInfo = await AuthenticationManager.GetExternalLoginInfoAsync(XsrfKey, User.Identity.GetUserId());
@@ -375,8 +351,7 @@ namespace shanuMVCUserRoles.Controllers
         }
 
 #region Helpers
-        // Used for XSRF protection when adding external logins
-        private const string XsrfKey = "XsrfId";
+private const string XsrfKey = "XsrfId";
 
         private IAuthenticationManager AuthenticationManager
         {

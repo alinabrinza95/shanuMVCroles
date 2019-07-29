@@ -319,10 +319,11 @@ C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\bin\Microsoft.Owi
 C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\bin\Microsoft.Owin.Security.Google.xml
 C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\bin\Microsoft.Owin.Security.Twitter.xml
 C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\bin\Microsoft.Owin.Security.MicrosoftAccount.xml
-C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\obj\Debug\shanuMVCUserRoles.csprojAssemblyReference.cache
 C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\obj\Debug\shanuMVCUserRoles.csproj.CoreCompileInputs.cache
 C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\obj\Debug\shanuMVCUserRoles.csproj.CopyComplete
 C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\obj\Debug\shanuMVCUserRoles.dll
 C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\obj\Debug\shanuMVCUserRoles.pdb
 C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\obj\Debug\shanuMVCUserRoles.Migrations.initial.resources
 C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\obj\Debug\shanuMVCUserRoles.csproj.GenerateResource.cache
+C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\obj\Debug\shanuMVCUserRoles.Resources.ControllerResources.resources
+C:\Users\albrinza\source\repos\shanuMVCroles\shanuMVCUserRoles\obj\Debug\shanuMVCUserRoles.csprojAssemblyReference.cache
